@@ -63,34 +63,15 @@ st.markdown("""
 # ----------------------------
 st.markdown("""
 <style>
-/* Hide Streamlit toolbar/search */
 [data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stSidebarNav"] {
     display: none !important;
 }
-
-/* Sidebar styling */
 [data-testid="stSidebar"] {
     background-color: #0e1117;
     border-right: 2px solid #1abc9c;
     box-shadow: 2px 0px 12px rgba(26, 188, 156, 0.25);
     padding-top: 20px;
 }
-
-/* Custom box around radio buttons */
-.mode-box {
-    border: 2px solid #1abc9c;
-    border-radius: 15px;
-    padding: 25px 20px;
-    background: linear-gradient(145deg, #10151b, #0e1117);
-    box-shadow: 0px 0px 15px rgba(26, 188, 156, 0.35);
-    transition: all 0.3s ease-in-out;
-    margin: 25px auto;
-    width: 90%;
-    text-align: center;
-    transform: translateX(-5%);
-}
-
-/* Title inside box */
 .mode-title {
     color: #1abc9c;
     font-size: 1.3rem;
@@ -98,8 +79,6 @@ st.markdown("""
     margin-bottom: 15px;
     text-shadow: 0px 0px 10px rgba(26, 188, 156, 0.5);
 }
-
-/* Align radio group and options */
 div[role="radiogroup"] {
     display: flex;
     flex-direction: column;
@@ -115,19 +94,12 @@ div[role="radiogroup"] label {
     transition: all 0.3s ease-in-out;
     border: 1px solid #1f2a35;
     color: #EAEAEA;
-    display: flex;
-    align-items: center;
-    gap: 10px;
 }
-
-/* Hover */
 div[role="radiogroup"] label:hover {
     transform: scale(1.03);
     border-color: #1abc9c;
     box-shadow: 0px 0px 8px rgba(26, 188, 156, 0.4);
 }
-
-/* Selected */
 div[role="radiogroup"] label:has(input:checked) {
     border: 2px solid #1abc9c;
     transform: scale(1.08);
@@ -148,21 +120,17 @@ with st.sidebar:
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ----------------------------
-# Webcam Mode
+# Webcam Mode (browser-based)
 # ----------------------------
 if mode == "Webcam":
-    st.write("### Live Webcam Object Detection")
-    st.info("Click **Start Webcam** to activate, unclick to stop.")
-    run = st.checkbox("Start Webcam")
+    st.write("### 📸 Live Webcam Object Detection")
+    st.info("Use your webcam below and capture a frame for object detection:")
 
-    FRAME_WINDOW = st.image([])
-    camera = cv2.VideoCapture(0)
+    img_file_buffer = st.camera_input("Take a picture or use webcam")
 
-    while run:
-        ret, frame = camera.read()
-        if not ret:
-            st.warning("Webcam not detected!")
-            break
+    if img_file_buffer is not None:
+        bytes_data = img_file_buffer.getvalue()
+        frame = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
 
         ClassIndex, conf, bbox = model.detect(frame, confThreshold=0.55)
         if len(ClassIndex) != 0:
@@ -173,9 +141,7 @@ if mode == "Webcam":
                                 (box[0] + 5, box[1] + 20),
                                 font, fontScale=0.7, color=(0, 255, 0), thickness=2)
 
-        FRAME_WINDOW.image(frame, channels="BGR")
-
-    camera.release()
+        st.image(frame, channels="BGR", caption="Detected from Webcam")
 
 # ----------------------------
 # Video Mode
